@@ -1,0 +1,20 @@
+.tap-footer {
+    font-family: monospace;
+    font-size: xx-large;
+    font-variant-caps:titling-caps;
+    left: 70%;
+    bottom: 10px;
+    position: relative;
+}
+
+.tap-header {
+    left: 60px;
+    top: 4px;
+    position: absolute;
+    width: 200px;
+    height: 100px;
+    background-image: url(images/UniCT-Logo.svg);
+    background-size: 200px;
+
+}
+
