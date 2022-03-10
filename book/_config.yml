@@ -1,0 +1,5 @@
+# in _config.yml
+title: "Techologies for Advanced Programming"
+logo: images/UniCT-Logo.svg
+execute:
+  execute_notebooks: "off"
