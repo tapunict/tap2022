@@ -1,0 +1,76 @@
+services:
+    kafkazk:
+        build: .
+        environment: 
+            - KAFKA_ACTION=start-zk
+        ports:
+            - "2181:2181"
+        networks:
+            tap:
+                ipv4_address: 10.0.100.22
+    kafkaserver:
+        build: .
+        depends_on:
+            - kafkazk
+        ports:
+            - "9092:9092"
+        environment: 
+            - KAFKA_ACTION=start-kafka
+        networks:
+            tap:
+                ipv4_address: 10.0.100.23
+
+    kafkatopic:
+        build: .
+        depends_on:
+            - kafkaserver
+        environment: 
+            - KAFKA_ACTION=create-topic
+            - KAFKA_SERVER=10.0.100.23
+            - KAFKA_TOPIC=tap
+        networks:
+            tap:
+                ipv4_address: 10.0.100.24
+    
+    kafkaproducer:
+        build: .
+        depends_on:
+            - kafkaserver
+        environment:
+            - KAFKA_ACTION=producer
+            - KAFKA_TOPIC=tap
+        stdin_open: true
+        tty: true   
+        networks:
+            tap:
+                ipv4_address: 10.0.100.25
+    
+    kafkaconsumer:
+        build: .
+        depends_on:
+            - kafkaserver
+        environment:
+            - KAFKA_ACTION=consumer
+            - KAFKA_TOPIC=tap
+        networks:
+            tap:
+                ipv4_address: 10.0.100.26
+    
+    webui:
+        image: provectuslabs/kafka-ui:latest
+        container_name: kafkaWebUI
+        environment:
+            - KAFKA_CLUSTERS_0_NAME=local
+            - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=10.0.100.23:9092
+            - KAFKA_CLUSTERS_0_ZOOKEEPER=10.0.100.22:2181
+        ports: 
+            - 8080:8080
+        networks: 
+            - tap
+    
+networks:
+    tap:
+        ipam:
+            driver: default
+            config:
+                - subnet: 10.0.100.0/25

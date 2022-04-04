@@ -1,0 +1,104 @@
+version: '3.7'
+services: 
+    zookeeper:
+        build: .
+        image: tap:kafka
+        container_name: kafkaZK
+        ports:
+            - "2181:2181"
+        environment:
+            - KAFKA_ACTION=start-zk
+        networks: 
+            tap:
+                ipv4_address: 10.0.100.22
+    zkui:
+        image: juris/zkui
+        container_name: zkui
+        environment:
+            - ZK_SERVER=10.0.100.22:2181
+        ports:
+            - 9090:9090
+        networks: 
+            - tap
+        depends_on:
+            - zookeeper
+    kafkaserver:
+        build: .
+        image: tap:kafka
+        container_name: kafkaServer
+        environment:
+            - KAFKA_ACTION=start-kafka
+        ports:
+            - 9092:9092
+        networks: 
+            tap:
+                ipv4_address: 10.0.100.23
+        depends_on:
+            - zookeeper
+    kafkatopic:
+        build: .
+        image: tap:kafka
+        container_name: kafkaCapybaraTopic
+        environment:
+            - KAFKA_ACTION=create-topic
+            - KAKFA_SERVER=10.0.100.23
+            - KAFKA_TOPIC=capybara
+        networks: 
+            tap:
+                ipv4_address: 10.0.100.24
+        depends_on:
+            - kafkaserver
+    kafkaproducer:
+        build: .
+        image: tap:kafka
+        container_name: kafkaProducer
+        environment:
+            - KAFKA_ACTION=producer
+            - KAFKA_TOPIC=capybara
+        networks: 
+            - tap
+        stdin_open: true
+        tty: true   
+        depends_on:
+            - kafkatopic     
+    kafkaconsumer:
+        build: .
+        image: tap:kafka
+        container_name: kafkaConsumer
+        environment:
+            - KAFKA_ACTION=consumer
+            - KAFKA_TOPIC=capybara
+        networks: 
+            - tap
+        depends_on:
+            - kafkatopic
+    webui:
+        image: provectuslabs/kafka-ui:latest
+        container_name: kafkaWebUI
+        environment:
+            - KAFKA_CLUSTERS_0_NAME=local
+            - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=10.0.100.23:9092
+        ports: 
+            - 8080:8080
+        networks: 
+            - tap
+        depends_on:
+            - kafkaserver
+    webui2:
+        image: obsidiandynamics/kafdrop
+        container_name: kafkaWebUI_2
+        environment:
+            - KAFKA_BROKERCONNECT=10.0.100.23:9092
+        ports: 
+            - 9000:9000
+        networks: 
+            - tap
+        depends_on:
+            - kafkaserver
+networks:
+    tap:
+        name: tap
+        driver: bridge
+        ipam:
+            config:
+                - subnet: 10.0.100.1/24
