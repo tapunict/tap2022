@@ -19,7 +19,7 @@ kafka-server-start.sh config/server.properties
 ;;
 "create-topic")
 cd ${KAFKA_DIR}
-kafka-topics.sh --create --zookeeper 10.0.100.22:2181 --replication-factor 1 --partitions 1 --topic ${KAFKA_TOPIC}
+kafka-topics.sh --create --bootstrap-server 10.0.100.23:9092 --replication-factor 1 --partitions 1 --topic ${KAFKA_TOPIC}
 ;;
 "producer")
 cd ${KAFKA_DIR}
