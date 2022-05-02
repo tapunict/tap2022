@@ -23,7 +23,7 @@ echo "Running example ARGS $@"
 ;;
 "pytap")
 cd /opt/tap/
-python ${TAP_CODE}
+python3 ${TAP_CODE}
 ;;
 "bash")
 while true
