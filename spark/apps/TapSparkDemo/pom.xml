@@ -10,22 +10,10 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <dependencies>
-        <dependency> <!-- Spark dependency -->
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.11</artifactId>
-            <version>2.4.5</version>
-            <scope>provided</scope>
-        </dependency>
         <dependency>
             <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming_2.11</artifactId>
-            <version>2.4.5</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-streaming-kafka-0-10-assembly_2.11</artifactId>
-            <version>2.4.5</version>
+            <artifactId>spark-streaming-kafka-0-10_2.12</artifactId>
+            <version>3.2.1</version>
         </dependency>
     </dependencies>
 </project>

@@ -28,7 +28,7 @@ df = spark \
 
 df.selectExpr("CAST(timestamp AS STRING)","CAST(value AS STRING)") \
   .writeStream \
-  .foreachBatch(elaborate) \
+  .format("console") \
   .start() \
   .awaitTermination()
 

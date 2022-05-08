@@ -18,9 +18,8 @@ topic = "tap"
 kvs = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokers})
 kvs.pprint()
 
-tweets = kvs.map(lambda (key, value): json.loads(value)).map(lambda json_object: (json_object["user"]["screen_name"], json_object["text"]))
-
-tweets.pprint()
+#tweets = kvs.map(lambda (key, value): json.loads(value))
+#tweets.pprint()
 
 ssc.start()
 ssc.awaitTermination()

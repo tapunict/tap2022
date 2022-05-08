@@ -1,59 +1,53 @@
 /* SimpleApp.java */
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
+import org.apache.spark.SparkConf;
+import org.apache.spark.TaskContext;
+import org.apache.spark.api.java.*;
+import org.apache.spark.api.java.function.*;
+import org.apache.spark.streaming.Durations;
+import org.apache.spark.streaming.api.java.*;
+import org.apache.spark.streaming.kafka010.*;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.serialization.StringDeserializer;
 import scala.Tuple2;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.serialization.StringDeserializer;
-
-import org.apache.spark.SparkConf;
-import org.apache.spark.streaming.api.java.*;
-import org.apache.spark.streaming.kafka010.ConsumerStrategies;
-import org.apache.spark.streaming.kafka010.KafkaUtils;
-import org.apache.spark.streaming.kafka010.LocationStrategies;
-import org.apache.spark.streaming.Durations;
 
 public class TapSpark {
     private static final Pattern SPACE = Pattern.compile(" ");
     public static void main(String[] args) throws Exception {
-        // StreamingExamples.setStreamingLogLevels();
-
         String brokers = "10.0.100.23:9092";
         String groupId = "consumer-group"; // Kafka Consumer Group
-        String topics = "tap";
+
+
+        Map<String, Object> kafkaParams = new HashMap<>();
+        kafkaParams.put("bootstrap.servers", brokers);
+        kafkaParams.put("key.deserializer", StringDeserializer.class);
+        kafkaParams.put("value.deserializer", StringDeserializer.class);
+        kafkaParams.put("group.id", groupId);
+        kafkaParams.put("auto.offset.reset", "latest");
+        kafkaParams.put("enable.auto.commit", false);
+
+        Collection<String> topics = Arrays.asList("tap");
 
         // Create context with a 2 seconds batch interval
         SparkConf sparkConf = new SparkConf().setAppName("JavaDirectKafkaWordCount");
-        JavaStreamingContext jssc = new JavaStreamingContext(sparkConf, Durations.seconds(2));
+        JavaStreamingContext streamingContext = new JavaStreamingContext(sparkConf, Durations.seconds(2));
 
-        Set<String> topicsSet = new HashSet<>(Arrays.asList(topics.split(",")));
-        Map<String, Object> kafkaParams = new HashMap<>();
-        kafkaParams.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
-        kafkaParams.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        kafkaParams.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        kafkaParams.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        JavaInputDStream<ConsumerRecord<String, String>> stream =
+                KafkaUtils.createDirectStream(
+                        streamingContext,
+                        LocationStrategies.PreferConsistent(),
+                        ConsumerStrategies.<String, String>Subscribe(topics, kafkaParams)
+                );
 
-        // Create direct kafka stream with brokers and topics
-        JavaInputDStream<ConsumerRecord<String, String>> messages = KafkaUtils.createDirectStream(
-                jssc,
-                LocationStrategies.PreferConsistent(),
-                ConsumerStrategies.Subscribe(topicsSet, kafkaParams));
-
-        // Get the lines, split them into words, count the words and print
-        JavaDStream<String> lines = messages.map(ConsumerRecord::value);
-        JavaDStream<String> words = lines.flatMap(x -> Arrays.asList(SPACE.split(x)).iterator());
-        JavaPairDStream<String, Integer> wordCounts = words.mapToPair(s -> new Tuple2<>(s, 1))
-                .reduceByKey((i1, i2) -> i1 + i2);
-        wordCounts.print();
+        JavaPairDStream<String, String> stringStringJavaPairDStream = stream.mapToPair(record -> new Tuple2<>(record.key(), record.value()));
+        stringStringJavaPairDStream.print();
 
         // Start the computation
-        jssc.start();
-        jssc.awaitTermination();
+        streamingContext.start();
+        streamingContext.awaitTermination();
     }
 }
