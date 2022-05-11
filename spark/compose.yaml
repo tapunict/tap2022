@@ -1,0 +1,29 @@
+services:
+  master: 
+    build:
+      context: .
+      dockerfile: spark-local/setup-master/Dockerfile 
+    container_name: local-spark-master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+      - "4040:4040"
+    networks:
+      tap:
+        ipv4_address: 10.0.100.27
+  worker: 
+    build:
+      context: .
+      dockerfile: spark-local/setup-worker/Dockerfile 
+    container_name: local-spark-worker
+    ports:
+      - "8081:8081"
+      - "7078:7078"
+    networks:
+      tap:
+        ipv4_address: 10.0.100.28
+
+
+networks:
+  tap:
+    external: true
