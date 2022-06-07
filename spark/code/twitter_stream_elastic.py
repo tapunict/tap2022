@@ -12,11 +12,10 @@ from pyspark import SparkContext
 from pyspark.sql import SparkSession
 from elasticsearch import Elasticsearch
 
-elastic_host="elasticsearch"
+elastic_host="http://elasticsearch:9200"
 elastic_index="taptweet"
 kafkaServer="kafkaServer:9092"
-topic = "tweet"
-
+topic = "tap"
 
 
 ## is there a field in the mapping that should be used to specify the ES document ID
@@ -95,7 +94,8 @@ pipeline = Pipeline(stages= [stage_1, stage_2, stage_3, model])
 pipelineFit = pipeline.fit(training_set)
 
 modelSummary=pipelineFit.stages[-1].summary
-modelSummary.accuracy
+print ("Model Accuracy:")
+print(modelSummary.accuracy)
 
 # Streaming Query
 
