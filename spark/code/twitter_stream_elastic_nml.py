@@ -102,6 +102,7 @@ df = spark \
     .option("subscribe", topic) \
     .load()
 
+
 # Cast the message received from kafka with the provided schema
 df = df.selectExpr("CAST(value AS STRING)") \
     .select(from_json("value", tweetKafka).alias("data")) \
@@ -118,3 +119,8 @@ df.writeStream \
     .start(elastic_index) \
     .awaitTermination()
  
+df.writeStream \
+    .outputMode("complete") \
+    .format("console") \
+    .start() \
+    .awaitTermination()
